@@ -9,6 +9,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import model.Equation;
+import model.FoundEvent;
+import model.FoundListener;
 import model.MyTask;
 import org.w3c.dom.css.RGBColor;
 
@@ -36,6 +38,19 @@ public class guiController {
 
     private MyTask zadanie;
     private int repeats;
+
+    private static class MySpeedListener implements FoundListener {
+        private GraphicsContext gc;
+        @Override
+        public void found(FoundEvent e) {
+            gc.drawImage(SwingFXUtils.toFXImage(e.getBi(), null), 0,0 );
+        }
+
+        public MySpeedListener(GraphicsContext gc) {
+            this.gc = gc;
+        }
+    }
+
     @FXML
     private void handleRunBtnAction()
     {
@@ -44,13 +59,16 @@ public class guiController {
             start.setDisable(true);
             stop.setDisable(false);
             GraphicsContext gc = canvas.getGraphicsContext2D();
-            zadanie = new MyTask(gc, repeats);
+            zadanie = new MyTask(repeats);
+            FoundListener listener = new MySpeedListener(gc);
+            zadanie.addFoundListener(listener);
             zadanie.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
                 @Override
                 public void handle(WorkerStateEvent event) {
                     long number = (long) zadanie.getValue();
                     start.setDisable(false);
                     stop.setDisable(true);
+
                     long finish=number*600*400/repeats;
                     area.setText("Pole: "+ finish);
                 }
